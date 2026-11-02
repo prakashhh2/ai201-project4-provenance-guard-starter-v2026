@@ -46,11 +46,13 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. It must name a number. -->
 
-
+Across each of three evaluation trials, no more than 1 of 10 pieces of my own
+writing is labeled high-confidence AI.
 
 **Why this target:**
 
-
+Accusing a real writer is more damaging than missing some AI-written text, so
+the system should be conservative before showing an AI accusation.
 
 ---
 
@@ -58,11 +60,14 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
-
+In each of three trials, the average combined score for five clearly
+AI-generated texts is at least 0.20 higher than the average combined score for
+five clearly human-written texts.
 
 **Why this target:**
 
-
+The system does not need perfect separation, but a visible 0.20 gap gives the
+scores useful diagnostic value instead of leaving both groups in the same band.
 
 ---
 
@@ -70,11 +75,14 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
-
+Across the label-coverage test set, all three labels — `human`, `unsure`, and
+`ai` — are returned at least once in every trial.
 
 **Why this target:**
 
-
+Each label is part of the contract. If one cannot be reached, readers either
+receive an overconfident result or the label logic has not been meaningfully
+tested.
 
 ---
 
@@ -82,11 +90,16 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
-
+For a valid appeal, the service returns HTTP 200 with the submitted
+`content_id` and status `under_review`, and appends one appeal entry to the
+audit log. For an unknown `content_id`, it returns HTTP 400 and appends no
+appeal entry.
 
 **Why this target:**
 
-
+An appeal must give a real writer a visible remedy while preserving the
+original decision. Rejecting unknown IDs prevents the log from claiming that a
+nonexistent submission was reviewed.
 
 ---
 
@@ -94,11 +107,15 @@ Two things worth knowing before you pick numbers:
 
 <!-- Your criterion. -->
 
-
+Requests with missing `text`, null or empty `text`, missing `creator_id`, or
+more than 12,000 characters receive HTTP 400 with a JSON error message, and
+none creates a `decided` entry in the audit log.
 
 **Why this target:**
 
-
+Malformed or oversized input should fail clearly before model scoring rather
+than crashing the service, wasting resources, or creating a misleading
+decision record.
 
 ---
 
