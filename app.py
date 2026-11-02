@@ -199,17 +199,63 @@ def submit():
     what should this do when `text` is missing, empty, or enormous? A crash on
     a malformed input is one of the most common real failures there is.
     """
-    payload = request.get_json(silent=True) or {}
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "error": "invalid_request",
+            "message": "request body must be a JSON object",
+        }), 400
 
-    # TODO: delete this and build the route.
+    text = payload.get("text")
+    creator_id = payload.get("creator_id")
+    if not isinstance(text, str) or not text.strip():
+        return jsonify({
+            "error": "invalid_request",
+            "message": "text must be a non-empty string",
+        }), 400
+    if not isinstance(creator_id, str) or not creator_id.strip():
+        return jsonify({
+            "error": "invalid_request",
+            "message": "creator_id must be a non-empty string",
+        }), 400
+    if len(text) > 12_000:
+        return jsonify({
+            "error": "invalid_request",
+            "message": "text must be 12,000 characters or fewer",
+        }), 400
+
+    import detector
+
+    try:
+        model_score = detector.model_signal(text)
+    except ValueError as exc:
+        return jsonify({
+            "error": "invalid_request",
+            "message": str(exc),
+        }), 400
+    except (ImportError, detector.DetectorUnavailable):
+        # shortcut: use 0.5 until the local detector dependencies/model are available.
+        model_score = 0.5
+
+    content_id = str(uuid.uuid4())
+    audit.log_decision(
+        content_id=content_id,
+        creator_id=creator_id,
+        guess=None,
+        model_score=model_score,
+        style_score=None,
+        combined_score=None,
+        label=None,
+        status="decided",
+    )
     return jsonify({
-        "error": "not_implemented",
-        "message": "POST /submit isn't built yet — see the TODO in app.py.",
-        "you_sent": {
-            "text_length": len(payload.get("text", "")),
-            "creator_id": payload.get("creator_id"),
-        },
-    }), 501
+        "content_id": content_id,
+        "guess": None,
+        "confidence": None,
+        "label": None,
+        "model_score": model_score,
+        "style_score": None,
+    })
 
 
 @app.post("/appeal")

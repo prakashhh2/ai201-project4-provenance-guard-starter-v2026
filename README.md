@@ -277,12 +277,24 @@ leaves the original decision intact.
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "...", "creator_id": "..."}'
+  -d '{"text": "A short sentence with enough words for the detector.", "creator_id": "writer-123"}'
 ```
 
 ```json
-
+{
+  "confidence": null,
+  "content_id": "6fed61f9-bb35-4ce4-b358-9a54cafabc7d",
+  "guess": null,
+  "label": null,
+  "model_score": 0.5,
+  "style_score": null
+}
 ```
+
+The request was checked against the route with Flask's in-process test client
+because this environment does not allow binding a local socket; the same JSON
+body is shown above for `curl`. The local detector dependency was unavailable,
+so the Milestone 3 fallback score was `0.5`.
 
 **An appeal**
 
@@ -296,6 +308,8 @@ $ curl -X POST http://127.0.0.1:5000/appeal \
 
 ```
 
+The appeal route is still reserved for Milestone 5.
+
 **What the log shows afterwards**
 
 ```bash
@@ -303,7 +317,22 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
 ```
 
 ```json
-
+{
+  "count": 1,
+  "entries": [
+    {
+      "combined_score": null,
+      "content_id": "6fed61f9-bb35-4ce4-b358-9a54cafabc7d",
+      "creator_id": "writer-123",
+      "guess": null,
+      "label": null,
+      "model_score": 0.5,
+      "status": "decided",
+      "style_score": null,
+      "timestamp": "2026-11-02T03:29:44+00:00"
+    }
+  ]
+}
 ```
 
 ---
