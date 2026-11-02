@@ -147,6 +147,25 @@ irregular enough for `style_score` to be low. For example, scores of `0.80` and
 disagreement should land in the unsure range instead of treating the model
 signal alone as proof that the writer used AI.
 
+### Milestone 4 calibration
+
+I ran the four required text types through the style signal and combiner. The
+detector dependencies were unavailable in this environment, so the model
+column uses the documented fallback `0.5000`; the route will use the real model
+score when `torch` and the detector model are installed.
+
+| Input | Model score | Style score | Combined score |
+|---|---:|---:|---:|
+| clearly AI | 0.5000 | 0.3797 | 0.4398 |
+| clearly human | 0.5000 | 0.2379 | 0.3690 |
+| formal human | 0.5000 | 0.1591 | 0.3296 |
+| lightly-edited AI | 0.5000 | 0.1994 | 0.3497 |
+
+The style signal separates the deliberately regular AI sample from the human
+samples, but it also gives formal human writing a low AI-like score. That is a
+useful limitation rather than proof of authorship: the two signals must be
+inspected separately when they disagree.
+
 
 ### False-positive trace
 
@@ -277,24 +296,24 @@ leaves the original decision intact.
 ```bash
 $ curl -X POST http://127.0.0.1:5000/submit \
   -H "Content-Type: application/json" \
-  -d '{"text": "A short sentence with enough words for the detector.", "creator_id": "writer-123"}'
+  -d '{"text": "The plan is straightforward. It offers several benefits, but honestly the rollout felt rushed. We can improve the process by listening to users and fixing the boring parts first.", "creator_id": "milestone-4-check"}'
 ```
 
 ```json
 {
-  "confidence": null,
-  "content_id": "6fed61f9-bb35-4ce4-b358-9a54cafabc7d",
+  "confidence": 0.3497,
+  "content_id": "bac80011-7d9f-4899-9100-1f90e11bbdb2",
   "guess": null,
   "label": null,
   "model_score": 0.5,
-  "style_score": null
+  "style_score": 0.1994
 }
 ```
 
 The request was checked against the route with Flask's in-process test client
 because this environment does not allow binding a local socket; the same JSON
 body is shown above for `curl`. The local detector dependency was unavailable,
-so the Milestone 3 fallback score was `0.5`.
+so the Milestone 4 fallback model score was `0.5`.
 
 **An appeal**
 
@@ -313,7 +332,7 @@ The appeal route is still reserved for Milestone 5.
 **What the log shows afterwards**
 
 ```bash
-$ curl "http://127.0.0.1:5000/log?limit=3"
+$ curl "http://127.0.0.1:5000/log?limit=1"
 ```
 
 ```json
@@ -321,15 +340,15 @@ $ curl "http://127.0.0.1:5000/log?limit=3"
   "count": 1,
   "entries": [
     {
-      "combined_score": null,
-      "content_id": "6fed61f9-bb35-4ce4-b358-9a54cafabc7d",
-      "creator_id": "writer-123",
+      "combined_score": 0.3497,
+      "content_id": "bac80011-7d9f-4899-9100-1f90e11bbdb2",
+      "creator_id": "milestone-4-check",
       "guess": null,
       "label": null,
       "model_score": 0.5,
       "status": "decided",
-      "style_score": null,
-      "timestamp": "2026-11-02T03:29:44+00:00"
+      "style_score": 0.1994,
+      "timestamp": "2026-11-02T03:33:00+00:00"
     }
   ]
 }

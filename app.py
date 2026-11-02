@@ -237,24 +237,29 @@ def submit():
         # shortcut: use 0.5 until the local detector dependencies/model are available.
         model_score = 0.5
 
+    import scoring
+    import stylometry
+
+    style_score = stylometry.style_signal(text)
+    combined_score = scoring.combine_signals(model_score, style_score)
     content_id = str(uuid.uuid4())
     audit.log_decision(
         content_id=content_id,
         creator_id=creator_id,
         guess=None,
         model_score=model_score,
-        style_score=None,
-        combined_score=None,
+        style_score=style_score,
+        combined_score=combined_score,
         label=None,
         status="decided",
     )
     return jsonify({
         "content_id": content_id,
         "guess": None,
-        "confidence": None,
+        "confidence": combined_score,
         "label": None,
         "model_score": model_score,
-        "style_score": None,
+        "style_score": style_score,
     })
 
 

@@ -1,1 +1,2 @@
 {"timestamp": "2026-11-02T03:29:44+00:00", "content_id": "6fed61f9-bb35-4ce4-b358-9a54cafabc7d", "creator_id": "writer-123", "guess": null, "model_score": 0.5, "style_score": null, "combined_score": null, "label": null, "status": "decided"}
+{"timestamp": "2026-11-02T03:33:00+00:00", "content_id": "bac80011-7d9f-4899-9100-1f90e11bbdb2", "creator_id": "milestone-4-check", "guess": null, "model_score": 0.5, "style_score": 0.1994, "combined_score": 0.3497, "label": null, "status": "decided"}
