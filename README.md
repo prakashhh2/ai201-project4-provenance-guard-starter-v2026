@@ -380,15 +380,27 @@ $ curl "http://127.0.0.1:5000/log?limit=2"
 
 **Moment 1**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to inspect the starter files and help trace a
+  submission from `POST /submit` through both signals, scoring, labels, and the
+  audit log.
+- *What came back:* It identified the existing route and audit helpers and
+  proposed documenting the signal blind spots, false-positive path, and the
+  request/response contracts before implementation.
+- *What I changed:* I kept the equal-weight rule and wrote the final contracts
+  and blind spots into this README, then added explicit validation behavior for
+  invalid and oversized submissions.
 
 **Moment 2**
 
-- *What I asked for:*
-- *What came back:*
-- *What I changed:*
+- *What I asked for:* I asked AI to implement the missing stylometry, combined
+  scoring, labels, and appeal workflow, then verify the route and audit log.
+- *What came back:* It implemented the three style measures, the two-signal
+  average, reader-facing labels, and append-only appeals. Testing also exposed
+  that this environment lacked `torch`, so the detector could not produce a
+  real model score.
+- *What I changed:* I kept the documented `0.5` detector fallback, checked the
+  style and label outputs myself, verified a real appeal in the log, and
+  recorded the limitation instead of claiming the model was calibrated.
 
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
