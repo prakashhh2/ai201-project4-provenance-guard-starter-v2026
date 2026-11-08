@@ -402,6 +402,20 @@ $ curl "http://127.0.0.1:5000/log?limit=2"
   style and label outputs myself, verified a real appeal in the log, and
   recorded the limitation instead of claiming the model was calibrated.
 
+**Moment 3**
+
+- *What I asked for:* I asked AI to help run the attack set and my five
+  criteria, compare the before and after results, and diagnose misses by
+  pipeline stage.
+- *What came back:* It grouped the ten initial evasion misses around the style
+  signal and identified EV10 as a score just below the AI-label boundary. It
+  also kept the missing-model limitation visible instead of treating the
+  fallback score as a real detector measurement.
+- *What I changed:* I chose one controlled improvement, changed only
+  `AI_THRESHOLD` from `0.65` to `0.60`, reran both test sets, inspected the
+  counts, and wrote the remaining nine evasion failures and the production
+  trade in this README.
+
 <!-- ═══════════════════════ UNIT 8 — THE TEST ═══════════════════════ -->
 
 ---
@@ -830,12 +844,55 @@ the writer pays if the detector's missing model score would have disagreed.
 <!-- For each attack still getting through and each criterion still missed:
      what you'd do, and why you stopped. -->
 
+No criterion was missed: all five stayed `MET` in all three after trials. Nine
+evasion attacks still got through, and each points to the same family of
+limitations:
+
+- **EV01:** typos still raise apparent vocabulary variety in signal two. I would
+  add typo-invariant or semantic features; I stopped after the one threshold
+  change required for this milestone.
+- **EV02:** broken-up sentences still look human to the sentence-length measure.
+  I would normalize sentence boundaries or add a meaning-based signal; I did
+  not change signal two and could not calibrate signal one here.
+- **EV03:** a pasted quotation still changes the measured text shape. I would
+  detect quoted spans or use chunk-level semantic scoring; I stopped to keep the
+  before/after comparison attributable to one change.
+- **EV04:** unusual words could not be tested against signal one because the
+  local model was unavailable and `model_score` stayed at `0.5`. I would install
+  or download GPT-2 and rerun this attack; the environment had no usable model
+  access, so I stopped with the limitation documented.
+- **EV05:** heavy human editing still lowers the style score enough to pass AI
+  text as human-like. I would calibrate both signals on edited AI samples and
+  real writing; I stopped after the single threshold experiment.
+- **EV06:** extreme sentence-length variation still moves signal two toward
+  human. I would make that feature less sensitive to deliberate extremes; I
+  stopped because that would be a second improvement.
+- **EV07:** punctuation padding still changes the style measurements. I would
+  cap or robustly normalize punctuation features; I stopped to avoid changing
+  the signal and threshold together.
+- **EV08:** text below the model window could not test signal one with the
+  fallback detector. I would score chunks and aggregate them after restoring
+  the local model; I stopped because that requires model-backed measurement.
+- **EV09:** a human-like opening still drags the style score down around AI text.
+  I would score chunks separately or require consistent evidence across the
+  document; I stopped after fixing only the EV10 boundary case.
+
+The threshold change fixed EV10, but it did not fix the underlying style-signal
+blind spot. The remaining attack misses are therefore known and bounded, not
+silently treated as successes.
+
 
 
 **The trade I'd make if this ran for real:**
 
 <!-- Two sentences. Fewer wrong accusations means more AI text getting through.
      Say which way you'd go and WHO PAYS FOR IT. -->
+
+I would bias toward fewer wrong accusations by keeping borderline writing in
+the unsure band and requiring corroborating evidence before a high-confidence
+AI label. AI evasion would get through more often, but the writers protected by
+that caution would not pay for an uncertain detector; the site would pay with
+missed AI detections and more manual review.
 
 
 
