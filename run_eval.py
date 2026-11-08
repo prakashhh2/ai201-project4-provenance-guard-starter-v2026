@@ -119,7 +119,7 @@ def main():
                     response = requests.post(f"{args.url}/submit", json=body,
                                              timeout=args.timeout)
                     payload = response.json() if response.content else {}
-                    results.append({
+                    result = {
                         "status": response.status_code,
                         "guess": payload.get("guess"),
                         "confidence": payload.get("confidence"),
@@ -127,10 +127,52 @@ def main():
                         "style_score": payload.get("style_score"),
                         "label": payload.get("label"),
                         "sent": preview,
-                    })
+                    }
+                    if scenario.get("appeal_after_submission"):
+                        if response.status_code == 200 and payload.get("content_id"):
+                            appeal_response = requests.post(
+                                f"{args.url}/appeal",
+                                json={
+                                    "content_id": payload["content_id"],
+                                    "reasoning": "I wrote this myself and want the decision reviewed.",
+                                },
+                                timeout=args.timeout,
+                            )
+                            result["appeal"] = {
+                                "status": appeal_response.status_code,
+                                "response": appeal_response.json(),
+                            }
+                        else:
+                            result["appeal"] = {"status": None, "response": None}
+                    results.append(result)
                 except Exception as exc:  # noqa: BLE001
                     results.append({"status": None, "error": f"{type(exc).__name__}: {exc}",
                                     "sent": preview})
+
+            if scenario.get("unknown_appeal"):
+                try:
+                    appeal_response = requests.post(
+                        f"{args.url}/appeal",
+                        json={
+                            "content_id": "00000000-0000-0000-0000-000000000000",
+                            "reasoning": "This ID should not exist.",
+                        },
+                        timeout=args.timeout,
+                    )
+                    results.append({
+                        "status": appeal_response.status_code,
+                        "appeal": {
+                            "status": appeal_response.status_code,
+                            "response": appeal_response.json(),
+                        },
+                        "sent": "unknown content_id appeal",
+                    })
+                except Exception as exc:  # noqa: BLE001
+                    results.append({
+                        "status": None,
+                        "error": f"{type(exc).__name__}: {exc}",
+                        "sent": "unknown content_id appeal",
+                    })
 
             trials.append(results)
             guesses = [r.get("guess") or "—" for r in results]

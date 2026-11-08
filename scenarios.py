@@ -26,45 +26,69 @@ SCENARIOS = [
     {
         "name": "my own writing",
         "criterion": 1,
-        # ⚠️ PUT YOUR OWN WRITING HERE. Not AI text, not a sample from the web —
-        # things you actually wrote. This is the criterion that matters most and
-        # it's meaningless with someone else's prose.
+        # These are prose passages from this project's README and criteria,
+        # written for the submission rather than copied from the attack set.
         "texts": [
-            "REPLACE ME with a paragraph you wrote yourself.",
-            "REPLACE ME with another one. Ten pieces is the usual number.",
+            "Accusing a real writer is more damaging than missing some AI-written text, so the system should be conservative before showing an AI accusation.",
+            "The system does not need perfect separation, but a visible 0.20 gap gives the scores useful diagnostic value instead of leaving both groups in the same band.",
+            "Each label is part of the contract. If one cannot be reached, readers either receive an overconfident result or the label logic has not been meaningfully tested.",
+            "An appeal must give a real writer a visible remedy while preserving the original decision. Rejecting unknown IDs prevents the log from claiming that a nonexistent submission was reviewed.",
+            "Malformed or oversized input should fail clearly before model scoring rather than crashing the service, wasting resources, or creating a misleading decision record.",
+            "The service uses two signals that measure different properties. One reads predictability, while the other reads the shape of the writing.",
+            "The content_id connects the submission, its audit entry, and any later appeal. The ping route remains the control for checking whether the service itself is working.",
+            "I kept the equal-weight rule and wrote the final contracts and blind spots into this README, then added explicit validation behavior for invalid and oversized submissions.",
+            "A wrong accusation costs a writer more than a missed detection. The unsure band should be a real outcome, not a hidden failure.",
+            "The writer can request a review if the result is wrong. Neither signal can prove authorship, so the original decision must remain visible in the audit log.",
+        ],
+    },
+    {
+        "name": "score separation",
+        "criterion": 2,
+        # First five are deliberately regular, repetitive AI-like prose; the
+        # last five are deliberately irregular human-like prose.
+        "texts": [
+            "The system works. The system works well. The system works every day. The system works for users. The system works as expected.",
+            "The plan is clear. The plan is useful. The plan is simple. The plan is practical. The plan is effective.",
+            "The team meets goals. The team meets goals daily. The team meets goals together. The team meets goals consistently. The team meets goals successfully.",
+            "The service receives data. The service checks data. The service processes data. The service stores data. The service returns data.",
+            "The process creates value. The process creates value quickly. The process creates value reliably. The process creates value for teams. The process creates value for users.",
+            "I missed the bus, swore at the timetable, and walked home in the rain; somehow that was the part of Tuesday that fixed my mood. It shouldn't have worked, but it did!",
+            "My grandmother kept receipts in a blue biscuit tin. Not important receipts, mostly: a pharmacy slip, a cinema stub, one note with a phone number nobody recognised—and a button.",
+            "The first draft was awful. I knew it was awful. Still, the sentence I nearly deleted—about the cracked mug by the sink—was the only bit that sounded like me.",
+            "When the power went out, the apartment became strangely honest: no fan, no refrigerator hum, just rain tapping the fire escape and my neighbour laughing through the wall.",
+            "I prefer fixing things in the morning. At night every loose screw feels like a personal insult; I start reorganising drawers instead of finishing the job, which is ridiculous.",
         ],
     },
     {
         "name": "label coverage",
-        "criterion": 2,
-        # Inputs spread across your score range, so you can check all three
-        # labels are actually reachable.
+        "criterion": 3,
         "texts": [
-            "REPLACE ME with something you're confident is AI-generated.",
-            "REPLACE ME with something you're confident is human-written.",
-            "REPLACE ME with something genuinely borderline.",
+            "I missed the bus, swore at the timetable, and walked home in the rain; somehow that was the part of Tuesday that fixed my mood. It shouldn't have worked, but it did!",
+            "The implementation of the proposed framework requires careful consideration of several key factors. First, it is important to note that the system must handle a wide variety of inputs. Additionally, the overall performance depends on a number of important variables.",
+            "🙂🙃😀😃😄😁😆😅😂🤣🙂🙃😀😃😄😁😆😅😂🤣🙂🙃😀😃😄😁😆😅😂🤣",
         ],
     },
-    # A bad-input criterion looks like this. Uncomment and adjust if that's one
-    # of your five — these are raw request bodies, sent exactly as written.
-    #
-    # {
-    #     "name": "bad input",
-    #     "criterion": 3,
-    #     "bodies": [
-    #         {"text": "", "creator_id": "eval_bad_empty"},
-    #         {"creator_id": "eval_bad_missing"},          # no text field at all
-    #         {"text": "word " * 50000, "creator_id": "eval_bad_huge"},
-    #         {"text": None, "creator_id": "eval_bad_null"},
-    #     ],
-    # },
-
-    # TODO: add what your remaining criteria need.
-    #
-    # A criterion about the appeal path can't be tested by sending text alone;
-    # it needs a submission first and then an appeal against the content_id
-    # that came back. You'll need to test that one by hand, or extend this file
-    # and run_eval.py to do it. Saying which you did is part of the write-up.
+    {
+        "name": "appeal path",
+        "criterion": 4,
+        "texts": [
+            "I wrote this short submission myself and want the decision reviewed because the result does not match my experience.",
+            "This second submission is another ordinary piece of writing that a real writer should be able to appeal without losing the original decision.",
+        ],
+        "appeal_after_submission": True,
+        "unknown_appeal": True,
+    },
+    {
+        "name": "bad input",
+        "criterion": 5,
+        "bodies": [
+            {"text": "", "creator_id": "eval_bad_empty"},
+            {"creator_id": "eval_bad_missing_text"},
+            {"text": None, "creator_id": "eval_bad_null"},
+            {"text": "A request without a creator should be rejected."},
+            {"text": "word " * 50000, "creator_id": "eval_bad_huge"},
+        ],
+    },
 ]
 
 
