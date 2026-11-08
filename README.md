@@ -408,7 +408,7 @@ $ curl "http://127.0.0.1:5000/log?limit=2"
 
 ## Rate Limiting
 
-**My limits:** ___ per minute, ___ per day
+**My limits:** 10 per minute, 200 per day
 
 **Why those numbers and not others:**
 <!-- Think about two people: a real writer submitting their own work a few
@@ -416,7 +416,12 @@ $ curl "http://127.0.0.1:5000/log?limit=2"
      thresholds. Your numbers have to be liveable for the first and hostile to
      the second. -->
 
-**What a caller counts as:** <!-- per address, or per creator_id? They fail
+Ten submissions per minute gives a writer room for occasional revisions while
+stopping a burst of threshold-mapping requests. The daily limit of 200 still
+allows substantial legitimate use without allowing an unattended script to
+send thousands of variations.
+
+**What a caller counts as:** `creator_id` <!-- per address, or per creator_id? They fail
 differently — one script can look like a thousand callers, and one household
 can look like one. -->
 
@@ -425,7 +430,7 @@ can look like one. -->
 <!-- python run_attacks.py --flood 15 -->
 
 ```
-
+200 200 200 200 200 200 200 200 200 200 429 429 429 429 429
 ```
 
 ---

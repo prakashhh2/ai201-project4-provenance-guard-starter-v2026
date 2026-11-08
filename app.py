@@ -151,7 +151,7 @@ def health():
 # ── YOU BUILD THIS ────────────────────────────────────────────────────────────
 
 @app.post("/submit")
-# @limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
+@limiter.limit(f"{config.RATE_LIMIT_PER_MINUTE}/minute;{config.RATE_LIMIT_PER_DAY}/day")
 def submit():
     """
     Take a piece of text, decide about it, log the decision, answer.
@@ -201,6 +201,8 @@ def submit():
     """
     payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
+        audit.log_rejection(creator_id="unknown", reason="invalid_request",
+                            message="request body must be a JSON object")
         return jsonify({
             "error": "invalid_request",
             "message": "request body must be a JSON object",
@@ -209,16 +211,28 @@ def submit():
     text = payload.get("text")
     creator_id = payload.get("creator_id")
     if not isinstance(text, str) or not text.strip():
+        audit.log_rejection(
+            creator_id=creator_id if isinstance(creator_id, str) and creator_id.strip() else "unknown",
+            reason="invalid_request",
+            message="text must be a non-empty string",
+        )
         return jsonify({
             "error": "invalid_request",
             "message": "text must be a non-empty string",
         }), 400
     if not isinstance(creator_id, str) or not creator_id.strip():
+        audit.log_rejection(creator_id="unknown", reason="invalid_request",
+                            message="creator_id must be a non-empty string")
         return jsonify({
             "error": "invalid_request",
             "message": "creator_id must be a non-empty string",
         }), 400
     if len(text) > 12_000:
+        audit.log_rejection(
+            creator_id=creator_id,
+            reason="invalid_request",
+            message="text must be 12,000 characters or fewer",
+        )
         return jsonify({
             "error": "invalid_request",
             "message": "text must be 12,000 characters or fewer",
@@ -229,6 +243,7 @@ def submit():
     try:
         model_score = detector.model_signal(text)
     except ValueError as exc:
+        audit.log_rejection(creator_id=creator_id, reason="invalid_request", message=str(exc))
         return jsonify({
             "error": "invalid_request",
             "message": str(exc),
