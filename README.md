@@ -603,6 +603,19 @@ for identical input, and the detector fallback was fixed at `0.5`.
 | 4. Appeal status and unknown-ID handling | 2 valid 200s + 1 unknown 400 | 2/2 + 1/1 | 2/2 + 1/1 | 2/2 + 1/1 | MET |
 | 5. Bad input is rejected as JSON 400 | 5/5 | 5/5 | 5/5 | 5/5 | MET |
 
+**How I decided:**
+
+1. Criterion 1 is **MET** because zero of ten pieces was labeled high-confidence
+   AI in any trial, below the maximum of one.
+2. Criterion 2 is **MET** because the average combined-score gap was `0.23494`
+   in every trial, above the required `0.20`.
+3. Criterion 3 is **MET** because the human, unsure, and AI labels each appeared
+   once in every trial.
+4. Criterion 4 is **MET** because both real appeals returned `200` with
+   `under_review`, while the unknown ID returned `400` in every trial.
+5. Criterion 5 is **MET** because all five malformed bodies returned JSON `400`
+   responses in all three trials and created no decided entries.
+
 The output below is copied from `results/run_2026-11-08_0247_before.md`,
 produced by `run_eval.py::write_report` from `run_eval.py::main`.
 
@@ -694,6 +707,55 @@ The audit log recorded 15 rejection entries for these bad-input trials and no
 
      Look for a pattern. Five failures on one signal is one problem, not five. -->
 
+All five of my criteria were measurable and met, so I did not revise any
+criterion. The attack run had ten broken cases, all in the `evasion` family;
+the route accepted them normally, so the route was not the failing stage.
+
+The main pattern was signal two. EV01, EV02, EV03, EV05, EV06, EV07, and EV09
+changed the shape of AI text in ways the stylometry signal reads as human-like:
+typos increase apparent vocabulary variety, sentence splitting changes length
+spread, quotations and punctuation change the measured shape, and human editing
+lowers the style score. Their `style_score` values ranged from `0.022` to
+`0.384`, so the equal-weight combining rule pulled the final score below the
+AI threshold. The stage is **signal two**; the mechanism is that superficial
+shape changes alter the signal without changing the text's authorship.
+
+The individual broken attacks were:
+
+- **EV01 — signal two:** typos raised apparent word variety (`style_score`
+  `0.384`), leaving the result `unsure` at `0.442`.
+- **EV02 — signal two:** broken-up sentences reduced the measured length-spread
+  score (`0.022`), producing `human` at `0.261`.
+- **EV03 — signal two:** the pasted quotation changed the style shape, producing
+  `human` at `0.3337`.
+- **EV04 — signal one, not measurable here:** unusual words were supposed to
+  affect perplexity, but the unavailable detector made `model_score` a constant
+  `0.5`; the observed `unsure` result at `0.4308` came from the fallback plus
+  style signal, so this needs a real-model rerun.
+- **EV05 — signal two in this run:** heavy human editing lowered `style_score`
+  to `0.1242`, producing `human` at `0.3121`; the fallback also prevented a
+  meaningful test of signal one.
+- **EV06 — signal two:** the long/short sentence contrast produced a low
+  `style_score` of `0.2254`, leaving the result `unsure` at `0.3627`.
+- **EV07 — signal two:** punctuation padding changed the style measurements,
+  producing `unsure` at `0.4266`.
+- **EV08 — signal one, not measurable here:** text below the model token window
+  could not test signal one because the model score was the `0.5` fallback; the
+  observed result was `unsure` at `0.3578`.
+- **EV09 — signal two in this run:** bolting a human opening onto AI text made
+  the style score `0.1866`, producing `human` at `0.3433`; signal one was again
+  masked by the fallback.
+- **EV10 — combining rule:** repeated stanza structure produced a high
+  `style_score` of `0.7718`, but averaging it with the fallback `0.5` gave
+  `0.6359`, just below the `0.65` AI threshold. The final label was therefore
+  `unsure`; the mechanism is the equal-weight boundary, not a route failure.
+
+The detector fallback is an important limitation on this diagnosis: EV04 and
+EV08 cannot tell me whether signal one would have resisted those attacks, and
+EV05/EV09 cannot measure the claimed interaction between both signals. The
+repeatable pattern I can defend from this run is that signal two is easy to
+move with formatting and surface edits, while the combining rule can turn even
+a high style score into an unsure label near the threshold.
 
 
 ---
